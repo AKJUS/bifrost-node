@@ -57,11 +57,28 @@ where
 			return Err(Error::<T>::InvalidSocketMessage.into());
 		}
 		// the socket message should be outbound
-		if !msg.is_outbound(
-			<T as pallet_evm::Config>::ChainId::get() as u32,
-			T::RegistrationPool::get_bitcoin_chain_id(),
-		) {
+		let chain_id = <T as pallet_evm::Config>::ChainId::get() as u32;
+		if !msg.is_outbound(chain_id, T::RegistrationPool::get_bitcoin_chain_id()) {
 			#[cfg(not(feature = "runtime-benchmarks"))]
+			return Err(Error::<T>::InvalidSocketMessage.into());
+		}
+		// check msg.params.token_idx0 by chain ID
+		let expected_token_idx0: &[u8] = if chain_id == 3068 {
+			// 0x000000030000000300000bfccb4e4f67b33eebfc17c82cf6e8c0b56d269aeb79
+			&[
+				0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0x0b, 0xfc, 0xcb, 0x4e, 0x4f, 0x67, 0xb3, 0x3e, 0xeb,
+				0xfc, 0x17, 0xc8, 0x2c, 0xf6, 0xe8, 0xc0, 0xb5, 0x6d, 0x26, 0x9a, 0xeb, 0x79,
+			]
+		} else if chain_id == 49088 {
+			// 0x00000003000000030000bfc06dc9a4f82a0dc721dc0aa89be6eadc7a553191c1
+			&[
+				0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0xbf, 0xc0, 0x6d, 0xc9, 0xa4, 0xf8, 0x2a, 0x0d, 0xc7,
+				0x21, 0xdc, 0x0a, 0xa8, 0x9b, 0xe6, 0xea, 0xdc, 0x7a, 0x55, 0x31, 0x91, 0xc1,
+			]
+		} else {
+			return Err(Error::<T>::InvalidSocketMessage.into());
+		};
+		if msg.params.token_idx0.as_slice() != expected_token_idx0 {
 			return Err(Error::<T>::InvalidSocketMessage.into());
 		}
 		// the socket message should not be submitted yet
