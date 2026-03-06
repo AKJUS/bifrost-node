@@ -369,15 +369,32 @@ pub mod pallet {
 			ensure!(!messages.is_empty(), Error::<T>::EmptySubmission);
 
 			let mut pool = <OutboundPool<T>>::get();
+			// collect sequence IDs already present in the pool to detect logical duplicates
+			// (same sequence, different raw bytes)
+			let mut pool_sequences: Vec<U256> = pool
+				.iter()
+				.filter_map(|m| SocketMessage::try_from(m.clone()).ok())
+				.map(|m| m.req_id.sequence)
+				.collect();
+
 			for message in messages {
-				// check if the message is already submitted
+				// check if the message is already submitted (exact bytes match)
 				if pool.contains(&message) {
+					continue;
+				}
+				// parse and check for sequence ID duplicate
+				let msg = match SocketMessage::try_from(message.clone()) {
+					Ok(m) => m,
+					Err(_) => continue,
+				};
+				if pool_sequences.contains(&msg.req_id.sequence) {
 					continue;
 				}
 				// verify the message
 				if T::SocketQueue::verify_socket_message(&message).is_err() {
 					continue;
 				}
+				pool_sequences.push(msg.req_id.sequence);
 				pool.push(message.clone());
 
 				Self::deposit_event(Event::SocketMessageSubmitted {
