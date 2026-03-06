@@ -2,7 +2,7 @@ mod impls;
 
 use crate::{
 	migrations, weights::WeightInfo, BTCTransaction, BroadcastSubmission, FeeRateSubmission,
-	SocketMessagesSubmission, Utxo, UtxoStatus, UtxoSubmission,
+	SocketMessage, SocketMessagesSubmission, Utxo, UtxoStatus, UtxoSubmission,
 };
 
 use frame_support::{
@@ -19,7 +19,7 @@ use bp_btc_relay::{
 };
 use bp_staking::{traits::Authorities, MAX_AUTHORITIES};
 use parity_scale_codec::{alloc::string::ToString, Encode};
-use sp_core::H256;
+use sp_core::{H256, U256};
 use sp_io::hashing::keccak_256;
 use sp_runtime::traits::{Block, Header, IdentifyAccount, Verify};
 use sp_std::{fmt::Display, vec, vec::Vec};
