@@ -7710,6 +7710,7 @@ dependencies = [
  "bp-btc-relay",
  "bp-core",
  "bp-staking",
+ "ethabi-decode",
  "fp-account",
  "frame-benchmarking",
  "frame-support",
